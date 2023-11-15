@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import compression  # Importing the compression module
 
+
 def choose_directory(prompt):
     while True:
         path = input(prompt)
@@ -11,6 +12,7 @@ def choose_directory(prompt):
         else:
             print("Invalid directory or compressed file. Please try again.")
 
+# lists directories and tar.gz compressed files 
 def list_directories(path):
     try:
         items = [os.path.join(path, item) for item in os.listdir(path)]
@@ -28,6 +30,7 @@ def list_directories(path):
         print("Directory not found.")
         return [], []
 
+# provides with numbered list of directories and tar.gz files to choose from 
 def select_directories():
     base_path = choose_directory("Enter the base path to list directories: ")
     dirs, tarballs = list_directories(base_path)
