@@ -84,8 +84,9 @@ def ssh_backup():
     if not dirs:
         print("No directories selected for backup.")
         return
+
     ssh_dest = input("Enter SSH destination (user@host): ")
-    dest = choose_directory("Enter the destination directory on the remote host: ")
+    dest = input("Enter the destination directory on the remote host: ")
     ssh_key = input("Enter the path to your private SSH key (e.g., ~/.ssh/id_rsa): ")
 
     # Compression for SSH backup
@@ -122,3 +123,48 @@ def ssh_backup():
     print("Starting backup over SSH...")
     subprocess.run(["rsync", "-avh", "--progress", "-e", f"ssh -i {ssh_key}"] + decompressed_items + [f"{ssh_dest}:{dest}"])
     print("SSH backup completed.")
+
+
+def ssh_restore():
+    # Ask for the remote source and the local destination
+    ssh_source = input("Enter SSH source (user@host): ")
+    remote_dir = input("Enter the remote directory to restore from: ")
+    local_dest = choose_directory("Enter the local destination directory: ")
+    ssh_key = input("Enter the path to your private SSH key (e.g., ~/.ssh/id_rsa): ")
+
+    # Ask if the user wants to compress the directories before restoring
+    should_compress = input("Do you want to compress the directories before restore? (yes/no): ")
+    compressed_files = []
+    if should_compress.lower() == 'yes':
+        # Compress the directories on the remote host
+        compressed_file_name = "backup.tar.gz"
+        remote_compressed_file = os.path.join("/tmp", compressed_file_name)
+        remote_compress_cmd = f"tar -czvf {remote_compressed_file} -C {remote_dir} ."
+        ssh_compress_command = f"ssh -i {ssh_key} {ssh_source} '{remote_compress_cmd}'"
+        subprocess.run(ssh_compress_command, shell=True)
+        compressed_files.append(remote_compressed_file)
+    else:
+        compressed_files.append(remote_dir)
+
+    # Restore the selected items using rsync
+    print("Starting restore from SSH...")
+    for item in compressed_files:
+        rsync_command = ["rsync", "-avh", "--progress", "-e", f"ssh -i {ssh_key}", f"{ssh_source}:{item}", local_dest]
+        subprocess.run(rsync_command)
+
+    # Ask if the user wants to decompress the directories after restoring
+    should_decompress = input("Do you want to decompress the directories after restore? (yes/no): ")
+    if should_decompress.lower() == 'yes':
+        for item in compressed_files:
+            # Decompress the downloaded file
+            compressed_file = os.path.join(local_dest, os.path.basename(item))
+            if item.endswith(".tar.gz"):
+                compression.decompress_directory(compressed_file, local_dest)
+
+    print("SSH restore completed.")
+
+
+
+
+
+

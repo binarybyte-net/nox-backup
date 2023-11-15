@@ -10,10 +10,12 @@ def main():
         elif choice == "2":
             backup.ssh_backup()
         elif choice == "3":
-            image.create_os_image()
+            backup.ssh_restore()  # Add this line
         elif choice == "4":
-            image.restore_from_image()
+            image.create_os_image()
         elif choice == "5":
+            image.restore_from_image()
+        elif choice == "6":
             print("Exiting the utility.")
             break
         else:
